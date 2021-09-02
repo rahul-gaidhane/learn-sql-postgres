@@ -1,0 +1,1 @@
+# Learning Sql Postgres queries
