@@ -261,3 +261,146 @@
             RIGHT JOIN film_reviews using (film_id)
             WHERE title IS NULL;
     ```
+
+## Self Join
+
+* A self-join is a regular join that joins a table to itself. In practice, you typically use a self-join to query hierarchical data or to compare rows within the same table.
+* Query Syntax,
+    ```sql
+        SELECT select_list FROM table_name t1
+            INNER JOIN table_name t2 ON join_predicate;
+    ```
+    * In this syntax, the `table_name` is joined to itself using the `INNER JOIN` clause.
+    * Also, you can use the `LEFT JOIN` or `RIGHT JOIN` clause to join table to itself like this:
+    ```sql  
+        SELECT select_list FROM table_name t1
+            LEFT JOIN table_name t2 ON join_predicate;
+    ```
+* For example,
+    * Querying hierarchical data example
+        ```sql
+            CREATE TABLE employee (
+                employee_id INT PRIMARY KEY,
+                first_name VARCHAR (255) NOT NULL,
+                last_name VARCHAR (255) NOT NULL,
+                manager_id INT,
+                FOREIGN KEY (manager_id) 
+                REFERENCES employee (employee_id) 
+                ON DELETE CASCADE
+            );
+
+            INSERT INTO employee (employee_id, first_name, last_name, manager_id)
+            VALUES
+                (1, 'Windy', 'Hays', NULL),
+                (2, 'Ava', 'Christensen', 1),
+                (3, 'Hassan', 'Conner', 1),
+                (4, 'Anna', 'Reeves', 2),
+                (5, 'Sau', 'Norman', 2),
+                (6, 'Kelsie', 'Hays', 3),
+                (7, 'Tory', 'Goff', 3),
+                (8, 'Salley', 'Lester', 3);
+
+            SELECT * FROM Employee;
+        ```
+        * The following query uses the self-join to find who reports to whom
+        ```sql
+            SELECT
+                e.first_name || ' ' || e.last_name employee,
+                m.first_name || ' ' || m.last_name manager
+            FROM
+                employee e
+            INNER JOIN employee m ON m.employee_id = e.manager_id
+            ORDER BY manager;
+        ```
+        * Notice that the top manager does not appear on the output
+        * To include the top manager in the result set, you use the `LEFT JOIN` instead of `INNER JOIN` clause as shown in the following query:
+        ```sql
+            SELECT 
+                e.first_name || ' ' || e.last_name employee,
+                m.first_name || ' ' || m.last_name manager
+            FROM
+                employee e
+            LEFT JOIN employee m ON m.employee_id = e.manager_id
+            ORDER BY manager;
+        ```
+    * Comparing the rows with the same table
+        ```sql
+            SELECT
+                f1.title, f2.title, f1.length
+            FROM
+                film f1
+            INNER JOIN film f2
+                ON f1.film_id <> f2.film_id AND f1.length = f2.length;
+        ```
+
+## Full Outer Join
+
+* Query Syntax,
+    ```sql
+        SELECT * FROM A
+        FULL [OUTER] JOIN B ON A.id = B.id
+    ```
+    * In this syntax, the `OUTER` keyword is optional.
+    * The full outer join combines the results of both left join and right join.
+    * If the rows in the joined table do not match, the full outer join sets NULL values for every column of the table that does not have the matching row.
+    * If a row from one table matches a row in another table, the result row will contain columns populated from columns of rows from both tables.
+* For Example,
+    * First, create two new tables for the demonstration: `employees` and `departments`:
+    ```sql
+        DROP TABLE IF EXISTS departments;
+        DROP TABLE IF EXISTS employees;
+
+        CREATE TABLE departments (
+            department_id serial PRIMARY KEY,
+            department_name VARCHAR(255) NOT NULL
+        );
+
+        CREATE TABLE employees (
+            employee_id serial PRIMARY KEY,
+            employee_name VARCHAR(255),
+            department_id INTEGER
+        );
+
+        INSERT INTO departments (department_name)
+        VALUES
+            ('Sales'),
+            ('Marketing'),
+            ('HR'),
+            ('IT'),
+            ('Production');
+        
+        INSERT INTO employees (
+            employee_name,
+            department_id
+        ) VALUES
+            ('Bette Nicholson', 1),
+            ('Christian Gable', 1),
+            ('Joe Swank', 2),
+            ('Fred Costner', 3),
+            ('Sandra Kilmer', 4),
+            ('Julia Mcqueen', NULL);
+    ```
+    ```sql
+        SELECT employee_name, department_name
+            FROM employees e
+        FULL OUTER JOIN departments d
+            ON d.department_id = e.department_id;
+    ```
+    * The result set includes every employee who belongs to a department and every department which have an employee. In addition, it includes every employee who does not belong to a department and every department that does not have an employee.
+    * To find the department that does not have any employees, you use a `WHERE` clause as follows:
+    ```sql
+        SELECT employee_name, department_name
+            FROM employees e
+        FULL OUTER JOIN departments d
+            ON d.department_id = e.department_id
+        WHERE employee_name IS NULL;
+    ```
+    * The result shows that the Production department does not have any employees.
+    * To find the employee who does not belong to any department, you check for the `NULL` of the `department_name` in the `WHERE` clause as the following statement:
+    ```sql
+        SELECT employee_name, department_name
+            FROM employees e
+        FULL OUTER JOIN departments d
+            ON d.department_id = e.department_id
+        WHERE department_name IS NULL;
+    ```
