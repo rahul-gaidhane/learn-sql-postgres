@@ -404,3 +404,113 @@
             ON d.department_id = e.department_id
         WHERE department_name IS NULL;
     ```
+
+## Cross Join
+
+* A `Cross Join` clause allows you to produce a cartesian product of rows in two or more tables.
+* Different from other join clauses such as `LEFT JOIN`  or `INNER JOIN`, the `CROSS JOIN` clause does not have a join predicate.
+* Query Syntax,
+    ```sql
+        SELECT select_list FROM T1 CROSS JOIN T2;
+    ```
+    * The following statement is equivalent to the above statement:
+    ```sql
+        SELECT select_list FROM T1, T2;
+    ```
+    * Also, you can use an `INNER JOI`N clause with a condition that always evaluates to `true` to simulate the cross join:
+    ```sql
+        SELECT select_list FROM T1 INNER JOIN T2 ON true;
+    ```
+* For example,
+    ```sql
+        DROP TABLE IF EXISTS T1;
+        CREATE TABLE T1 (label CHAR(1) PRIMARY KEY);
+
+        DROP TABLE IF EXISTS T2;
+        CREATE TABLE T2 (score INT PRIMARy KEY);
+
+        INSERT INTO T1(label) VALUES ('A'), ('B');
+
+        INSERT INTO T2(score) VALUES (1), (2), (3);
+    ```
+    * The following statement uses the `CROSS JOIN` operator to join the table T1 with the table T2
+    ```sql
+        SELECT * FROM T1 CROSS JOIN T2;
+    ```
+
+## Natural Join
+
+* A natural join is a join that creates an implicit join based on the same column names in the joined tables.
+* A natural join can be an inner join, left join, or right join.
+* If you do not specify a join explicitly e.g., `INNER JOIN`, `LEFT JOIN`, `RIGHT JOIN`, PostgreSQL will use the `INNER JOIN` by default.
+* If you use the asterisk (*) in the select list, the result will contain the following columns:
+    * All the common columns, which are the columns from both tables that have the same name.
+    * Every column from both tables, which is not a common column.
+* Query Syntax,
+    ```sql
+        SELECT select_list FROM T1 NATURAL [INNER, LEFT, RIGHT] JOIN T2;
+    ```
+* For Example,
+    ```sql
+        DROP TABLE IF EXISTS categories;
+        CREATE TABLE categories (
+            category_id serial PRIMARY KEY,
+            category_name VARCHAR (255) NOT NULL
+        );
+
+        DROP TABLE IF EXISTS products;
+        CREATE TABLE products (
+            product_id serial PRIMARY KEY,
+            product_name VARCHAR (255) NOT NULL,
+            category_id INT NOT NULL,
+            FOREIGN KEY (category_id) REFERENCES categories (category_id)
+        );
+    ```
+    * Each category has zero or many products and each product belongs to one and only one category.
+    * The `category_id` column in the `products` table is the foreign key that references to the primary key of the `categories` table. The `category_id` is the common column that we will use to perform the natural join.
+    ```sql
+        INSERT INTO categories (category_name)
+        VALUES
+            ('Smart Phone'),
+            ('Laptop'),
+            ('Tablet');
+
+        INSERT INTO products (product_name, category_id)
+        VALUES
+            ('iPhone', 1),
+            ('Samsung Galaxy', 1),
+            ('HP Elite', 2),
+            ('Lenovo Thinkpad', 2),
+            ('iPad', 3),
+            ('Kindle Fire', 3);
+    ```
+    * The following statement uses the `NATURAL JOIN` clause to join the `products` table with the `categories` table:
+    ```sql
+        SELECT * FROM products NATURAL JOIN categories;
+    ```
+    * The above statement is equivalent to the following statement that uses the `INNER JOIN` clause.
+    ```sql
+        SELECT	* FROM products
+            INNER JOIN categories USING (category_id);
+    ```
+    * The convenience of the `NATURAL JOIN` is that it does not require you to specify the join clause because it uses an implicit join clause based on the common column.
+    * However, you should avoid using the NATURAL JOIN whenever possible because sometimes it may cause an unexpected result.
+    * For example, See the following city and country tables from the sample database:
+    ```sql
+        City
+            - city_id
+            - city
+            - country_id
+            - last_update
+        
+        Country
+            - country_id
+            - country
+            - last_update
+    ```
+    * Both tables have the same `country_id` column so you can use the `NATURAL JOIN` to join these tables as follows:
+    ```sql
+        SELECT * FROM city NATURAL JOIN country;
+    ```
+    * The query returns an empty result set.
+    * The reason is that both tables also have another common column called `last_update`, which cannot be used for the join. However, the `NATURAL JOIN` clause just uses the `last_update` column.

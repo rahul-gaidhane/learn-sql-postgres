@@ -248,3 +248,55 @@ SELECT employee_name, department_name
 FULL OUTER JOIN departments d
 	ON d.department_id = e.department_id
 WHERE department_name IS NULL;
+
+DROP TABLE IF EXISTS T1;
+CREATE TABLE T1 (label CHAR(1) PRIMARY KEY);
+
+DROP TABLE IF EXISTS T2;
+CREATE TABLE T2 (score INT PRIMARy KEY);
+
+INSERT INTO T1(label) VALUES ('A'), ('B');
+INSERT INTO T2(score) VALUES (1), (2), (3);
+
+SELECT * FROM T1;
+SELECT * FROM T2;
+
+SELECT * FROM T2 CROSS JOIN T1;
+
+DROP TABLE IF EXISTS categories;
+CREATE TABLE categories (
+	category_id serial PRIMARY KEY,
+	category_name VARCHAR (255) NOT NULL
+);
+
+DROP TABLE IF EXISTS products;
+CREATE TABLE products (
+	product_id serial PRIMARY KEY,
+	product_name VARCHAR (255) NOT NULL,
+	category_id INT NOT NULL,
+	FOREIGN KEY (category_id) REFERENCES categories (category_id)
+);
+
+INSERT INTO categories (category_name)
+VALUES
+	('Smart Phone'),
+	('Laptop'),
+	('Tablet');
+
+INSERT INTO products (product_name, category_id)
+VALUES
+	('iPhone', 1),
+	('Samsung Galaxy', 1),
+	('HP Elite', 2),
+	('Lenovo Thinkpad', 2),
+	('iPad', 3),
+	('Kindle Fire', 3);
+	
+SELECT * FROM products;
+SELECT * FROM categories;
+SELECT * FROM products NATURAL JOIN categories;
+SELECT * FROM products INNER JOIN categories USING (category_id);
+
+SELECT * FROM CITY;
+SELECT * FROM COUNTRY;
+SELECT * FROM city NATURAL JOIN country;
